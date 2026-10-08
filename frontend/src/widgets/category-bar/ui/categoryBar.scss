@@ -1,0 +1,59 @@
+.category-bar {
+  position: relative;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+
+  overflow-x: auto;
+
+  padding: 15px 0;
+
+  &__inner {
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+
+
+    display: flex;
+    overflow-x: auto;
+
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 999px;
+
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(10px);
+
+    min-width: 320px;
+    max-width: 500px;
+    width: 100%;
+  }
+
+  &__item {
+    -webkit-tap-highlight-color: transparent;
+
+    flex: 0 0 auto; // 👈 ключевая строка (не сжимается)
+
+    min-width: 110px; // 👈 минимальная ширина (подбери под дизайн)
+    padding: 6px 12px;
+
+    border: none;
+    background: transparent;
+
+    color: #aaa;
+    font-size: 14px;
+
+    cursor: pointer;
+    white-space: nowrap;
+
+    transition: 0.2s;
+
+    &:not(:last-child) {
+      border-right: 1px solid rgba(255,255,255,0.2);
+    }
+
+    &.active {
+      color: white;
+      font-weight: 500;
+    }
+  }
+}

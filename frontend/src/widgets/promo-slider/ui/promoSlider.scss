@@ -1,0 +1,172 @@
+.promo-slider {
+  background: transparent;
+  margin-top: 10px;
+  margin-bottom: 30px;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-inline: 20px;
+  }
+
+  &__title {
+    font-size: 18px; // уменьшили с 20px
+    font-weight: 600;
+    color: #ffffff;
+    margin: 0;
+  }
+
+  &__controls {
+    display: flex;
+    gap: 8px;
+  }
+
+  &__nav {
+    width: 28px; // уменьшили с 32px
+    height: 28px; // уменьшили с 32px
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    font-size: 16px; // уменьшили с 18px
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+
+    // Убираем дефолтные стили кнопки
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+      // Убираем transform: scale
+    }
+
+    &:active {
+      // Убираем transform: scale
+      background: rgba(255, 255, 255, 0.15);
+    }
+  }
+
+  &__track {
+    display: flex;
+    gap: 10px; // уменьшили с 16px
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    padding-inline: 20px;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  &__card {
+    flex: 0 0 auto;
+    width: 160px; // уменьшили с 200px
+    background: #1c1c1e;
+    border-radius: 14px; // уменьшили с 16px
+    overflow: hidden;
+    transition: box-shadow 0.2s ease; // убрали transform
+    cursor: pointer;
+
+    // Убираем дефолтные стили при нажатии
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); // уменьшили тень
+      // Убрали transform: translateY(-4px)
+    }
+
+    &:active {
+      // Убрали transform: translateY(0)
+    }
+  }
+
+  &__card-gradient {
+    height: 100px; // уменьшили с 120px
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      animation: shimmer 3s infinite;
+    }
+  }
+
+  &__card-emoji {
+    font-size: 48px; // уменьшили с 56px
+    z-index: 1;
+    animation: bounce 2s ease-in-out infinite;
+  }
+
+  &__card-content {
+    padding: 12px; // уменьшили с 16px
+  }
+
+  &__card-title {
+    font-size: 14px; // уменьшили с 16px
+    font-weight: 600;
+    color: #ffffff;
+    margin: 0 0 6px 0; // уменьшили отступ
+    line-height: 1.3;
+  }
+
+  &__card-subtitle {
+    font-size: 12px; // уменьшили с 14px
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0 0 10px 0; // уменьшили отступ
+  }
+
+  &__card-button {
+    width: 100%;
+    padding: 6px 10px; // уменьшили с 8px 12px
+    border: none;
+    border-radius: 10px; // уменьшили с 12px
+    color: #ffffff;
+    font-size: 12px; // уменьшили с 14px
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+
+    // Убираем дефолтные стили
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+
+    &:active {
+      opacity: 0.8;
+    }
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translate(-30%, -30%) rotate(45deg);
+  }
+  100% {
+    transform: translate(30%, 30%) rotate(45deg);
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px); // уменьшили с -8px
+  }
+}

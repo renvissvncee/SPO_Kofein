@@ -1,0 +1,67 @@
+.time-card {
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-self: center;
+  margin-top: 30px;
+  margin-bottom: 30px;
+  width: 100%;
+  max-width: 350px;
+  padding: 5px 20px;
+  border-radius: 40px;
+  background-color: #1E1E1E;
+
+  &__header {
+    margin-top: 20px;
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 5px;
+
+    &__choose-time{
+      color: rgba(255, 255, 255, 0.7);
+    }
+  }
+
+  &__search-date-wrapper {
+    margin: 20px 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+  }
+
+  &__date-button {
+    margin-inline: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 15px;
+    background: black;
+    font-size: 18px;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    justify-self: end;
+    color: #F8F9FA;
+  }
+
+  &__search-button {
+    border-radius: 15px;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    grid-column: 2;
+    align-self: center;
+    padding: 18px 18px;
+    background: black;
+    color: #F8F9FA;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+}

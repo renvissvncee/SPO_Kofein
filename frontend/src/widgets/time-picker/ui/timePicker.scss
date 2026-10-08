@@ -1,0 +1,116 @@
+@use '../../../shared/styles/variables.scss';
+
+.timePicker {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto auto;
+  justify-content: center;
+  justify-items: center;
+  column-gap: 5px;
+  height: 120px;
+
+  &__signature{
+    color: variables.$secondary_black;
+    margin: 0.5em auto;
+  }
+
+  &__column {
+    overflow-y: scroll;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    scrollbar-width: none;
+    height: 100%;
+
+    scroll-snap-type: y mandatory;
+
+    /* 🔥 КЛЮЧЕВОЕ */
+    padding-top: calc(50% - 55px);
+    padding-bottom: calc(50% - 55px);
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  &__item {
+    height: 90px;
+    min-height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 105px; // вот это увеличить хочу
+    font-weight: 900;
+    color: #F8F9FA;
+    scroll-snap-align: center;
+
+    opacity: 0.2;
+    transform: scale(0.8);
+    transition: all 0.2s ease;
+    filter: blur(1px);
+  }
+
+  &__item.active {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+
+  &__separator {
+    font-size: 90px;
+    font-weight: 750;
+    color: #F8F9FA;
+    align-self: center;
+    margin-bottom: 20px;
+  }
+
+  &__box {
+    width: 160px;
+    height: 105px; // вот это уменьшить, чтобы было только активнуб цифру видно
+    border-radius: 24px;
+    overflow: hidden;
+    position: relative;
+  }
+
+
+  &__box::before,
+  &__box::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 10px; // 👈 меняем с 60px на 15px
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  &__box::before {
+    top: 0;
+    background: linear-gradient(to bottom, #1c1c1e, transparent);
+  }
+
+  &__box::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 104px;
+    transform: translateY(-50%);
+
+    border-top: 2px solid rgba(255,255,255,0.2);
+    border-bottom: 2px solid rgba(255,255,255,0.2);
+
+    pointer-events: none;
+    z-index: 3;
+
+  }
+
+  &__full_box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+}

@@ -1,0 +1,124 @@
+@use "../../../src/shared/styles/variables.scss";
+
+.shops-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: transparent;
+  flex: 1;
+  min-height: 0; // 👈 ВАЖНО
+  padding-bottom: 100px;
+
+  padding-top: 6px; // 👈 ДОБАВИТЬ - фиксированный отступ сверху
+}
+
+.shops-page.map-mode {
+  overflow: hidden; // 👈 убираем скролл страницы
+  padding-bottom: 0;
+
+  padding-top: 6px; // 👈 ДОБАВИТЬ - фиксированный отступ сверху
+}
+
+.shops-page.map-mode .shops-content {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+
+  z-index: 1; // 👈 ниже табов
+}
+
+.shops-tabs-wrapper {
+  position: sticky;
+  top: 0; // 👈 высота хедера, чтобы табы были под ним
+  z-index: 99; // 👈 ниже хедера (999), но выше контента
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  background: transparent; // 👈 фон, чтобы контент не просвечивал
+  padding-block: 10px; // 👈 немного отступов для воздуха
+}
+
+.shops-content {
+  flex: 1;
+  width: 100%;
+}
+
+.shops-tabs {
+  display: flex;
+  width: 100%;
+  max-width: 220px;
+
+  background: variables.$primary_black;
+  border-radius: 15px;
+  border: 1.2px #8E8E93 solid;
+
+  overflow: hidden;
+
+  &__button {
+    flex: 1 1 0;
+    min-width: 0;
+
+    background: transparent;
+    border: none;
+
+    padding: 5px 0;
+    color: variables.$primary_white;
+    font-size: 15px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+
+    &:first-child {
+      border-right: 0.6px solid #8E8E93;
+    }
+
+    &:last-child {
+      border-left: 0.6px solid #8E8E93;
+    }
+  }
+
+  &__button-disabled {
+    flex: 1 1 0;
+    min-width: 0;
+
+    background: transparent;
+    border: none;
+
+    padding: 5px 0;
+    color: #8E8E93;
+    font-size: 15px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: not-allowed;
+  }
+}
+
+
+.favorite-coffeehouses {
+  margin-bottom: 30px;
+
+  &__title {
+    padding-left: 30px;
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #000;
+  }
+
+  &__closest {
+    padding-left: 30px;
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 0;
+    color: #000;
+  }
+
+}

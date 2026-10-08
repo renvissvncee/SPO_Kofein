@@ -1,0 +1,45 @@
+@import '../../../shared/styles/variables';
+
+.header {
+  position: fixed;  // 👈 фиксируем хедер
+  top: 0;           // 👈 прижимаем к верху
+  left: 0;          // 👈 прижимаем к левому краю
+  right: 0;
+
+  z-index: 999;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: $space-md $space-lg;
+  width: 100%;
+  height: 80px;
+
+  background: $primary_black;
+
+  &__title {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin: 0;
+    color: $primary_white;
+  }
+
+  &__button-profile{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 40px;
+    height: 40px;
+
+    border: none;
+    border-radius: 50%;
+
+    background: transparent;
+    color: $primary_white;
+
+    cursor: pointer;
+  }
+}
