@@ -1,3 +1,6 @@
+-- Схема БД проекта «Кофеин» (PostgreSQL 13+).
+-- Соответствует ORM-моделям в backend/db/models.py.
+
 CREATE TABLE users (
     telegram_id BIGINT PRIMARY KEY,
     phone VARCHAR(30),
@@ -5,7 +8,7 @@ CREATE TABLE users (
 );
 
 CREATE TABLE coffee_shops (
-    id UUID PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     description TEXT,
     opening_time TIME NOT NULL,
@@ -14,6 +17,7 @@ CREATE TABLE coffee_shops (
     latitude DECIMAL(9,6) NOT NULL,
     longitude DECIMAL(9,6) NOT NULL,
     is_active BOOLEAN DEFAULT TRUE,
+    coffee_shop_image TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -24,45 +28,65 @@ CREATE TABLE coffee_shop_owners (
 );
 
 CREATE TABLE menu_categories (
-    id UUID PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     coffee_shop_id UUID NOT NULL REFERENCES coffee_shops(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
-    UNIQUE (coffee_shop_id, name)
+    CONSTRAINT uq_menu_category_shop_name UNIQUE (coffee_shop_id, name)
 );
 
 CREATE TABLE menu_items (
-    id UUID PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     coffee_shop_id UUID NOT NULL REFERENCES coffee_shops(id) ON DELETE CASCADE,
     category_id UUID NOT NULL REFERENCES menu_categories(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    base_price INTEGER NOT NULL CHECK (base_price >= 0),
+    base_price INTEGER NOT NULL,
     image_url TEXT,
     is_available BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+
+    CONSTRAINT ck_menu_item_base_price CHECK (base_price >= 0)
 );
 
 CREATE TABLE orders (
-    id UUID PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     telegram_id BIGINT NOT NULL REFERENCES users(telegram_id),
     coffee_shop_id UUID NOT NULL REFERENCES coffee_shops(id),
     status VARCHAR(30) NOT NULL DEFAULT 'pending',
-    total_amount INTEGER NOT NULL CHECK (total_amount >= 0),
+    total_amount INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT NOW(),
 
-    CHECK (status IN (
+    CONSTRAINT ck_order_total_amount CHECK (total_amount >= 0),
+    -- cart — корзина, pending — ждёт подтверждения, confirmed — готовится,
+    -- ready — можно забирать, completed — выдан, cancelled — отменён.
+    CONSTRAINT ck_order_status CHECK (status IN (
+        'cart',
         'pending',
         'confirmed',
+        'ready',
         'completed',
         'cancelled'
     ))
 );
 
 CREATE TABLE order_items (
-    id UUID PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
     menu_item_id UUID NOT NULL REFERENCES menu_items(id),
-    quantity INTEGER NOT NULL CHECK (quantity > 0),
-    unit_price INTEGER NOT NULL CHECK (unit_price >= 0),
-    total_price INTEGER NOT NULL CHECK (total_price >= 0)
+    quantity INTEGER NOT NULL DEFAULT 1,
+    unit_price INTEGER NOT NULL,
+    total_price INTEGER NOT NULL,
+
+    CONSTRAINT ck_order_item_quantity CHECK (quantity > 0),
+    CONSTRAINT ck_order_item_unit_price CHECK (unit_price >= 0),
+    CONSTRAINT ck_order_item_total_price CHECK (total_price >= 0)
+);
+
+CREATE TABLE favorites (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    telegram_id BIGINT NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+    coffee_shop_id UUID NOT NULL REFERENCES coffee_shops(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+
+    CONSTRAINT uq_favorite_user_shop UNIQUE (telegram_id, coffee_shop_id)
 );
