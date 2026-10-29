@@ -1,9 +1,9 @@
 import base64
-from dataclasses import dataclass
-from datetime import datetime, timezone
 import hashlib
 import hmac
 import json
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import parse_qsl
 
@@ -57,9 +57,7 @@ def validate_telegram_init_data(
     if not received_hash:
         raise AuthenticationError("Telegram authentication hash is missing")
 
-    data_check_string = "\n".join(
-        f"{key}={value}" for key, value in sorted(data.items())
-    )
+    data_check_string = "\n".join(f"{key}={value}" for key, value in sorted(data.items()))
     secret_key = hmac.new(
         b"WebAppData",
         settings.telegram_bot_token.encode("utf-8"),
@@ -78,7 +76,7 @@ def validate_telegram_init_data(
     except (KeyError, TypeError, ValueError) as error:
         raise AuthenticationError("Invalid Telegram authentication date") from error
 
-    current_time = now or datetime.now(timezone.utc)
+    current_time = now or datetime.now(UTC)
     age_seconds = int(current_time.timestamp()) - auth_date
     if age_seconds < -30 or age_seconds > settings.telegram_auth_max_age_seconds:
         raise AuthenticationError("Telegram authentication data has expired")
@@ -115,7 +113,7 @@ def create_access_token(
     now: datetime | None = None,
 ) -> tuple[str, int]:
     settings.validate_auth()
-    current_time = now or datetime.now(timezone.utc)
+    current_time = now or datetime.now(UTC)
     issued_at = int(current_time.timestamp())
     expires_at = issued_at + settings.jwt_ttl_seconds
     header = {"alg": "HS256", "typ": "JWT"}
@@ -163,7 +161,7 @@ def decode_access_token(
     if not hmac.compare_digest(expected_signature, received_signature):
         raise AuthenticationError("Invalid token signature")
 
-    current_timestamp = int((now or datetime.now(timezone.utc)).timestamp())
+    current_timestamp = int((now or datetime.now(UTC)).timestamp())
     try:
         subject = int(payload["sub"])
         issued_at = int(payload["iat"])
