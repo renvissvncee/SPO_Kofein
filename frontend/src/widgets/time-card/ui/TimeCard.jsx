@@ -1,11 +1,9 @@
-import {useState, useEffect, useRef} from 'react';
+import {useState, useEffect} from 'react';
 import './timeCard.scss';
 import '../../../widgets/time-picker/ui/TimePicker.jsx'
 import TimePicker from "../../time-picker/ui/TimePicker.jsx";
 import {Clock, Calendar} from "lucide-react";
 import SwipeCalendar from "../../swipe-calendar/SwipeCalendar.jsx"
-
-import {api} from "../../../shared/api/baseApi.js"
 
 const TimeCard = ({setCurrentPage,
                       setSelectedHourShops,
@@ -31,16 +29,6 @@ const TimeCard = ({setCurrentPage,
         new Date().getMinutes().toString().padStart(2, '0')
     )
 
-    const formatDate = (date) => {
-        const options = {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric'
-        };
-        return date.toLocaleDateString('ru-RU', options);
-    };
-
-
     // Нажатие кнопки выбора даты (Календарь)
     const handleCalendarClick = () => {
         setIsCalendarOpen(prev => !prev);
@@ -56,12 +44,6 @@ const TimeCard = ({setCurrentPage,
     }
 
 
-    const getCurrentTime = () => {
-        const now = new Date();
-        const hours = now.getHours().toString().padStart(2, '0');
-        const minutes = now.getMinutes().toString().padStart(2, '0');
-        return `${hours}:${minutes}`;
-    };
 
     return (
         <div className="time-card">

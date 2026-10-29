@@ -1,8 +1,7 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import './promoSlider.scss';
 
 const PromoSlider = () => {
-    const [scrollPosition, setScrollPosition] = useState(0);
     const sliderRef = useRef(null);
 
     const promos = [
@@ -64,37 +63,14 @@ const PromoSlider = () => {
         }
     ];
 
-    const scroll = (direction) => {
-        const container = sliderRef.current;
-        const scrollAmount = 300;
 
-        if (direction === 'left') {
-            container.scrollLeft -= scrollAmount;
-        } else {
-            container.scrollLeft += scrollAmount;
-        }
 
-        // Обновляем позицию для показа/скрытия кнопок
-        setTimeout(() => {
-            setScrollPosition(container.scrollLeft);
-        }, 100);
-    };
-
-    const handleScroll = () => {
-        setScrollPosition(sliderRef.current.scrollLeft);
-    };
-
-    const showLeftButton = scrollPosition > 0;
-    const showRightButton = sliderRef.current
-        ? scrollPosition < sliderRef.current.scrollWidth - sliderRef.current.clientWidth - 10
-        : true;
 
     return (
         <div className="promo-slider">
             <div
                 className="promo-slider__track"
                 ref={sliderRef}
-                onScroll={handleScroll}
             >
                 {promos.map((promo) => (
                     <div key={promo.id} className="promo-slider__card">

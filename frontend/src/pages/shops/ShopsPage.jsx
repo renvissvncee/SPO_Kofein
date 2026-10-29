@@ -2,14 +2,12 @@ import '../shops/shopsPage.scss'
 import {useState} from "react";
 import ShopsListPage from "../../widgets/shops-list/ui/ShopsListPage.jsx";
 
-import {api} from "../../shared/api/baseApi.js";
 import ShopsMapPage from "../../widgets/shops-map/ui/ShopsMapPage.jsx";
 import FavoriteCoffeehouses from "../../widgets/favorite-coffeehouses/ui/FavoriteCoffeehouses.jsx";
 import PromoSlider from "../../widgets/promo-slider/ui/PromoSlider.jsx";
 
 const ShopsPage = ({ setCurrentPage, setSelectedShop,
-                   selectedHourShops, setSelectedHourShops,
-                   selectedMinuteShops, setSelectedMinuteShops,
+                   selectedHourShops, selectedMinuteShops,
                        selectedDate={selectedDate},
                        setSelectedDate={setSelectedDate}}) => {
 

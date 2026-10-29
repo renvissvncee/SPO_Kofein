@@ -5,25 +5,18 @@ import './homePage.scss';
 import '../../shared/lib/react-bits/glass-surface/GlassSurface.jsx'
 import GlassSurface from "../../shared/lib/react-bits/glass-surface/GlassSurface.jsx";
 
-import {api} from "../../shared/api/baseApi.js";
-import {useEffect, useState} from "react";
+import {useState} from "react";
 import OrderStatusCard from "../../widgets/order-status-card/ui/OrderStatusCard.jsx";
 
-const HomePage = ({setCurrentPage, currentPage,
-                  selectedHourShops, setSelectedHourShops,
-                  selectedMinuteShops, setSelectedMinuteShops,
+const HomePage = ({setCurrentPage,
+                  setSelectedHourShops,
+                  setSelectedMinuteShops,
                   selectedDate, setSelectedDate}) => {
 
-    const [currentOrder, setCurrentOrder] = useState(null);
-
-    useEffect(() => {
+    const [currentOrder] = useState(() => {
         const lastOrder = sessionStorage.getItem('lastOrder');
-        if (lastOrder) {
-            const order = JSON.parse(lastOrder);
-            setCurrentOrder(order);
-            //sessionStorage.removeItem('lastOrder');
-        }
-    }, []);
+        return lastOrder ? JSON.parse(lastOrder) : null;
+    });
 
     return (
         <div className="home-page">

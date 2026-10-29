@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useState, useRef, useId } from 'react';
+import { useEffect, useRef, useId } from 'react';
 import '../glass-surface/glassSurface.css';
 
 const GlassSurface = ({
@@ -29,7 +29,7 @@ const GlassSurface = ({
     const redGradId = `red-grad-${uniqueId}`;
     const blueGradId = `blue-grad-${uniqueId}`;
 
-    const [svgSupported, setSvgSupported] = useState(true);
+    const svgSupported = true;
 
     const containerRef = useRef(null);
     const feImageRef = useRef(null);
@@ -135,23 +135,6 @@ const GlassSurface = ({
         setTimeout(updateDisplacementMap, 0);
     }, [width, height]);
 
-    const supportsSVGFilters = () => {
-        if (typeof window === 'undefined' || typeof document === 'undefined') {
-            return false;
-        }
-
-        const isWebkit = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
-        const isFirefox = /Firefox/.test(navigator.userAgent);
-
-        if (isWebkit || isFirefox) {
-            return false;
-        }
-
-        const div = document.createElement('div');
-        div.style.backdropFilter = `url(#${filterId})`;
-
-        return div.style.backdropFilter !== '';
-    };
 
     const containerStyle = {
         ...style,

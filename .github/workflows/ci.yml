@@ -89,6 +89,4 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       # --legacy-peer-deps: @pbe/react-yandex-maps ещё не объявляет поддержку React 19
       - run: npm ci --legacy-peer-deps
-      # Пока только предупреждает: в frontend/ 29 ошибок ESLint, их исправляет автор
-      # фронтенда. После исправления заменить на `npm run lint`, и шаг станет блокирующим.
-      - run: npm run lint || echo "::warning title=ESLint::в frontend/ остались ошибки линтера, см. лог шага"
+      - run: npm run lint

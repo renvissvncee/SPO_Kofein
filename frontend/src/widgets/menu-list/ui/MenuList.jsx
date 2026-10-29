@@ -20,7 +20,6 @@ const MenuList = ({
                       totalSum,
                       setTotalSum,
                       selectedShop,
-                      onOrderPlaced,
                       setCurrentPage
                   }) => {
 
@@ -61,7 +60,6 @@ const MenuList = ({
     const [isLoading, setIsLoading] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false); // для блокировки во время обновления
 
-    const [isOrdering, setIsOrdering] = useState(false);
 
     const categoryRefs = useRef({});
 
@@ -300,10 +298,6 @@ const MenuList = ({
     }, []);
 
 
-    const openCart = async () => {
-        setIsCartOpen(true);
-        await loadCart(); // 🔥 обновляем корзину
-    };
 
     // Обработчик добавления товара
     const handleClickMenuItem = async (item) => {

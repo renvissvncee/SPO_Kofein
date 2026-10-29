@@ -3,29 +3,6 @@ import './shopsMapPage.scss'
 import {api} from '../../../shared/api/baseApi.js'
 import {format} from "date-fns"
 
-
-// заглушка для магазинов на карте с координатами
-const mockShops = [
-    {
-        id: 1,
-        name: "M Coffee",
-        address: "9 Парковая, 34",
-        coords: [55.7558, 37.6173]
-    },
-    {
-        id: 2,
-        name: "Coffee Like",
-        address: "Невский проспект, 12",
-        coords: [55.7512, 37.6184]
-    },
-    {
-        id: 3,
-        name: "Surf Coffee",
-        address: "ул. Ленина, 45",
-        coords: [55.7601, 37.6205]
-    }
-];
-
 const ShopsMapPage = ({setCurrentPage,
                           setSelectedShop,
                           selectedHourShops,
@@ -43,12 +20,10 @@ const ShopsMapPage = ({setCurrentPage,
     console.log(formatted);
 
     const [shops, setShops] = useState([]);
-    const [loading, setLoading] = useState(false);
 
     // запрос к апи для получения магазинов (кофеен)
     const loadShops = async (hours, minutes, date) => {
         try {
-            setLoading(true);
 
             let time = null;
 
@@ -80,13 +55,13 @@ const ShopsMapPage = ({setCurrentPage,
         } catch (err) {
             console.error(err);
             setShops([]);
-        } finally {
-            setLoading(false);
         }
     }
 
     // загрузка данных
     useEffect(() => {
+        // запрос данных при смене времени: setState внутри loadShops вызывается после ответа API
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         loadShops(selectedHourShops, selectedMinuteShops, formatted);
     }, [selectedHourShops, selectedMinuteShops]);
 
@@ -136,7 +111,6 @@ const ShopsMapPage = ({setCurrentPage,
 
             // 📍 геолокация
             window.ymaps.geolocation.get().then((result) => {
-                const userGeoObject = result.geoObjects.get(0);
                 const userCoords = result.geoObjects.get(0).geometry.getCoordinates();
 
                 map.setCenter(userCoords, 14);

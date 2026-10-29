@@ -1,6 +1,5 @@
 import '../ui/shopHeader.scss'
 import { ChevronLeft } from 'lucide-react'
-import {useEffect, useState} from "react";
 
 const ShopHeader = ({
                         shop,
