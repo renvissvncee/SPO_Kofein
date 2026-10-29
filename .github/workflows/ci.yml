@@ -77,9 +77,6 @@ jobs:
   frontend-lint:
     name: Фронтенд — линтер (ESLint)
     runs-on: ubuntu-latest
-    # Пока не блокирует сборку: в frontend/ 29 ошибок ESLint, их исправляет
-    # автор фронтенда. После исправления строку continue-on-error нужно удалить.
-    continue-on-error: true
     defaults:
       run:
         working-directory: frontend
@@ -92,4 +89,6 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       # --legacy-peer-deps: @pbe/react-yandex-maps ещё не объявляет поддержку React 19
       - run: npm ci --legacy-peer-deps
-      - run: npm run lint
+      # Пока только предупреждает: в frontend/ 29 ошибок ESLint, их исправляет автор
+      # фронтенда. После исправления заменить на `npm run lint`, и шаг станет блокирующим.
+      - run: npm run lint || echo "::warning title=ESLint::в frontend/ остались ошибки линтера, см. лог шага"
