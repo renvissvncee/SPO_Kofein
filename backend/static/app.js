@@ -18,14 +18,14 @@ async function authenticate() {
   telegram.expand();
 
   try {
-    const response = await fetch("/auth/telegram", {
+    const response = await fetch("/api/v1/auth/telegram", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ init_data: telegram.initData }),
     });
     const data = await response.json();
     if (!response.ok) {
-      throw new Error(data.detail || "Telegram-аутентификация не прошла");
+      throw new Error(data.error?.message || "Telegram-аутентификация не прошла");
     }
 
     sessionStorage.setItem("kofein_access_token", data.access_token);

@@ -1,11 +1,10 @@
+import os
 from dataclasses import dataclass
 from functools import lru_cache
-import os
 from pathlib import Path
 from urllib.parse import urlparse
 
 from dotenv import load_dotenv
-
 
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
@@ -19,6 +18,9 @@ class Settings:
     jwt_ttl_seconds: int
     telegram_auth_max_age_seconds: int
     cors_origins: tuple[str, ...]
+    redis_url: str = ""
+    dev_auth_enabled: bool = False
+    database_null_pool: bool = False
 
     def validate_auth(self) -> None:
         if not self.telegram_bot_token:
@@ -31,6 +33,10 @@ class Settings:
         parsed_url = urlparse(self.mini_app_url)
         if parsed_url.scheme != "https" or not parsed_url.netloc:
             raise RuntimeError("MINI_APP_URL must be a public HTTPS URL")
+
+
+def _flag(name: str) -> bool:
+    return os.getenv(name, "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _positive_int(name: str, default: int) -> int:
@@ -60,8 +66,9 @@ def get_settings() -> Settings:
         mini_app_url=os.getenv("MINI_APP_URL", ""),
         jwt_secret=os.getenv("JWT_SECRET", ""),
         jwt_ttl_seconds=_positive_int("JWT_TTL_SECONDS", 3600),
-        telegram_auth_max_age_seconds=_positive_int(
-            "TELEGRAM_AUTH_MAX_AGE_SECONDS", 3600
-        ),
+        telegram_auth_max_age_seconds=_positive_int("TELEGRAM_AUTH_MAX_AGE_SECONDS", 3600),
         cors_origins=origins,
+        redis_url=os.getenv("REDIS_URL", ""),
+        dev_auth_enabled=_flag("DEV_AUTH_ENABLED"),
+        database_null_pool=_flag("DATABASE_NULL_POOL"),
     )
