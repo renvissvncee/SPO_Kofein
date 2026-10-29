@@ -69,7 +69,10 @@ def test_access_token_round_trip(settings: Settings) -> None:
 def test_tampered_access_token_is_rejected(settings: Settings) -> None:
     token, _ = create_access_token(100001, settings)
     head, payload, signature = token.split(".")
-    tampered_token = f"{head}.{payload}.{signature[:-1]}A"
+    # Меняем первый символ: последний символ base64url несёт лишь часть битов,
+    # и его замена иногда не меняет подпись (тест падал примерно в 1 из 16 запусков).
+    replacement = "B" if signature[0] == "A" else "A"
+    tampered_token = f"{head}.{payload}.{replacement}{signature[1:]}"
 
     with pytest.raises(AuthenticationError, match="signature"):
         decode_access_token(tampered_token, settings)
