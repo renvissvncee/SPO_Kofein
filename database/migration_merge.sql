@@ -1,7 +1,8 @@
 -- Миграция существующей БД бэкенда (созданной через Base.metadata.create_all)
 -- к объединённой схеме из schema.sql.
 -- Данные не теряются: владельцы из coffee_shops.owners переносятся в coffee_shop_owners,
--- статус 'new' переименовывается в 'pending'.
+-- статус 'new' переименовывается в 'pending', пользователи получают поля
+-- профиля Telegram, кофейни — район, заказы — время получения.
 -- Скрипт можно запускать повторно.
 
 BEGIN;
@@ -13,11 +14,23 @@ ALTER TABLE users ALTER COLUMN phone TYPE VARCHAR(30);
 ALTER TABLE users ALTER COLUMN created_at TYPE TIMESTAMPTZ;
 ALTER TABLE users ALTER COLUMN created_at DROP NOT NULL;
 ALTER TABLE users ALTER COLUMN created_at SET DEFAULT NOW();
+-- Профиль Telegram (раньше был в migrations/001_telegram_auth.sql)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS username TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS language_code TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_premium BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+UPDATE users SET first_name = 'Telegram user' WHERE first_name IS NULL;
+ALTER TABLE users ALTER COLUMN first_name SET NOT NULL;
+UPDATE users SET created_at = NOW() WHERE created_at IS NULL;
+ALTER TABLE users ALTER COLUMN created_at SET NOT NULL;
 
 -- coffee_shops
 ALTER TABLE coffee_shops ALTER COLUMN id SET DEFAULT gen_random_uuid();
 ALTER TABLE coffee_shops ALTER COLUMN name TYPE VARCHAR(255);
 ALTER TABLE coffee_shops ADD COLUMN IF NOT EXISTS coffee_shop_image TEXT;
+ALTER TABLE coffee_shops ADD COLUMN IF NOT EXISTS district VARCHAR(100);
 ALTER TABLE coffee_shops ALTER COLUMN is_active DROP NOT NULL;
 ALTER TABLE coffee_shops ALTER COLUMN is_active SET DEFAULT TRUE;
 ALTER TABLE coffee_shops ALTER COLUMN created_at TYPE TIMESTAMPTZ;
@@ -87,6 +100,8 @@ ALTER TABLE menu_items ADD CONSTRAINT ck_menu_item_base_price CHECK (base_price 
 -- orders
 ALTER TABLE orders ALTER COLUMN id SET DEFAULT gen_random_uuid();
 ALTER TABLE orders DROP CONSTRAINT IF EXISTS ck_order_status;
+ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_status_check;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS pickup_time TIMESTAMPTZ;
 UPDATE orders SET status = 'pending' WHERE status IS NULL OR status = 'new';
 ALTER TABLE orders ALTER COLUMN status TYPE VARCHAR(30);
 ALTER TABLE orders ALTER COLUMN status SET DEFAULT 'pending';
@@ -136,5 +151,26 @@ ALTER TABLE favorites ADD CONSTRAINT favorites_telegram_id_fkey
 ALTER TABLE favorites DROP CONSTRAINT IF EXISTS favorites_coffee_shop_id_fkey;
 ALTER TABLE favorites ADD CONSTRAINT favorites_coffee_shop_id_fkey
     FOREIGN KEY (coffee_shop_id) REFERENCES coffee_shops(id) ON DELETE CASCADE;
+
+-- Обязательные флаги и даты создания
+UPDATE coffee_shops SET is_active = TRUE WHERE is_active IS NULL;
+ALTER TABLE coffee_shops ALTER COLUMN is_active SET NOT NULL;
+UPDATE menu_items SET is_available = TRUE WHERE is_available IS NULL;
+ALTER TABLE menu_items ALTER COLUMN is_available SET NOT NULL;
+UPDATE coffee_shops SET created_at = NOW() WHERE created_at IS NULL;
+ALTER TABLE coffee_shops ALTER COLUMN created_at SET NOT NULL;
+UPDATE menu_items SET created_at = NOW() WHERE created_at IS NULL;
+ALTER TABLE menu_items ALTER COLUMN created_at SET NOT NULL;
+UPDATE orders SET created_at = NOW() WHERE created_at IS NULL;
+ALTER TABLE orders ALTER COLUMN created_at SET NOT NULL;
+UPDATE favorites SET created_at = NOW() WHERE created_at IS NULL;
+ALTER TABLE favorites ALTER COLUMN created_at SET NOT NULL;
+
+-- Не больше одной корзины на пользователя и кофейню, позиция в заказе не дублируется
+CREATE UNIQUE INDEX IF NOT EXISTS uq_order_cart_per_shop
+    ON orders (telegram_id, coffee_shop_id)
+    WHERE status = 'cart';
+ALTER TABLE order_items DROP CONSTRAINT IF EXISTS uq_order_item_menu_item;
+ALTER TABLE order_items ADD CONSTRAINT uq_order_item_menu_item UNIQUE (order_id, menu_item_id);
 
 COMMIT;
