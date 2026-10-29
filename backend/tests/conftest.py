@@ -8,8 +8,10 @@ import pytest
 os.environ.setdefault("TELEGRAM_BOT_TOKEN", "123456789:test-bot-token")
 os.environ.setdefault("MINI_APP_URL", "https://example.com/mini-app/")
 os.environ.setdefault("JWT_SECRET", "test-secret-that-is-at-least-32-characters-long")
-os.environ.setdefault(
-    "DATABASE_URL",
+# Тесты пересоздают схему public, поэтому база задаётся отдельной переменной
+# TEST_DATABASE_URL и никогда не берётся из DATABASE_URL рабочего окружения.
+os.environ["DATABASE_URL"] = os.environ.get(
+    "TEST_DATABASE_URL",
     "postgresql+asyncpg://postgres:postgres@localhost:5432/kofein_test",
 )
 os.environ["DATABASE_NULL_POOL"] = "true"
