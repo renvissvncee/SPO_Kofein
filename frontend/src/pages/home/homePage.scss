@@ -1,0 +1,23 @@
+.home-page {
+  width: 100%;
+
+  &__search {
+    margin-bottom: 24px;
+  }
+
+  &__search-button {
+    width: 100%;
+    padding: 12px 16px;
+    background: #F2F2F7;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    color: #8E8E93;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      background: #E5E5EA;
+    }
+  }
+}

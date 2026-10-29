@@ -1,16 +1,21 @@
 from datetime import datetime
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
-from starlette.responses import Response
 
 from .config import get_settings
-from .db.models import CoffeeShopOwner, User, session_dependency
+from .db.models import CoffeeShop, CoffeeShopOwner, User, session_dependency
+from .errors import (
+    ForbiddenError,
+    NotFoundError,
+    UnauthorizedError,
+    error_responses,
+)
 from .security import (
     AuthenticationError,
     TelegramUser,
@@ -19,12 +24,25 @@ from .security import (
     validate_telegram_init_data,
 )
 
+router = APIRouter(prefix="/auth", tags=["Аутентификация"])
 
-router = APIRouter(prefix="/auth", tags=["authentication"])
+# auto_error=False: отсутствие заголовка обрабатываем сами, чтобы вернуть 401
+# в общем формате ошибок, а не 403 от FastAPI.
+bearer_scheme = HTTPBearer(auto_error=False, description="JWT из POST /auth/telegram")
 
 
 class TelegramAuthRequest(BaseModel):
-    init_data: str = Field(min_length=1, max_length=10_000)
+    init_data: str = Field(
+        min_length=1,
+        max_length=10_000,
+        description="Строка Telegram.WebApp.initData без изменений",
+    )
+
+
+class DevAuthRequest(BaseModel):
+    telegram_id: int = Field(gt=0, examples=[100001])
+    first_name: str = Field(default="Dev user", min_length=1, max_length=100)
+    username: str | None = Field(default=None, max_length=100)
 
 
 class UserResponse(BaseModel):
@@ -36,73 +54,47 @@ class UserResponse(BaseModel):
     username: str | None
     language_code: str | None
     is_premium: bool
+    phone: str | None = None
     created_at: datetime
 
 
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
-    expires_at: int
+    expires_at: int = Field(description="Unix-время окончания действия токена")
     user: UserResponse
 
 
-class JWTAuthenticationMiddleware(BaseHTTPMiddleware):
-    async def dispatch(
-        self,
-        request: Request,
-        call_next: RequestResponseEndpoint,
-    ) -> Response:
-        request.state.telegram_id = None
-        request.state.authentication_error = None
-        authorization = request.headers.get("Authorization")
-        if authorization:
-            scheme, separator, token = authorization.partition(" ")
-            if scheme.lower() != "bearer" or not separator or not token.strip():
-                request.state.authentication_error = "Invalid authorization header"
-            else:
-                try:
-                    request.state.telegram_id = decode_access_token(
-                        token.strip(), get_settings()
-                    )
-                except (AuthenticationError, RuntimeError) as error:
-                    request.state.authentication_error = str(error)
-        return await call_next(request)
-
-
-def unauthorized(message: str = "Authentication required") -> HTTPException:
-    return HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail=message,
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
-
-async def require_authenticated_user(request: Request) -> int:
-    error = request.state.authentication_error
-    if error:
-        raise unauthorized(error)
-    telegram_id = request.state.telegram_id
-    if telegram_id is None:
-        raise unauthorized()
-    return telegram_id
+async def require_authenticated_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+) -> int:
+    """Возвращает telegram_id из проверенного JWT или отвечает 401."""
+    if credentials is None:
+        raise UnauthorizedError("Требуется аутентификация")
+    if credentials.scheme.lower() != "bearer" or not credentials.credentials.strip():
+        raise UnauthorizedError("Invalid authorization header")
+    try:
+        return decode_access_token(credentials.credentials.strip(), get_settings())
+    except (AuthenticationError, RuntimeError) as error:
+        raise UnauthorizedError(str(error)) from error
 
 
 async def require_coffee_shop_owner(
-    coffee_shop_id: UUID,
+    shop_id: UUID,
     telegram_id: int = Depends(require_authenticated_user),
     session: AsyncSession = Depends(session_dependency),
 ) -> int:
+    """Пропускает только владельца кофейни shop_id из пути запроса."""
+    if await session.get(CoffeeShop, shop_id) is None:
+        raise NotFoundError("Кофейня не найдена")
     result = await session.execute(
         select(CoffeeShopOwner).where(
-            CoffeeShopOwner.coffee_shop_id == coffee_shop_id,
+            CoffeeShopOwner.coffee_shop_id == shop_id,
             CoffeeShopOwner.telegram_id == telegram_id,
         )
     )
     if result.scalar_one_or_none() is None:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only a coffee shop owner can perform this action",
-        )
+        raise ForbiddenError("Действие доступно только владельцу кофейни")
     return telegram_id
 
 
@@ -136,21 +128,60 @@ async def upsert_telegram_user(
     return user
 
 
-@router.post("/telegram", response_model=TokenResponse)
-async def authenticate_with_telegram(
-    data: TelegramAuthRequest,
-    session: AsyncSession = Depends(session_dependency),
-) -> TokenResponse:
-    settings = get_settings()
-    try:
-        telegram_user = validate_telegram_init_data(data.init_data, settings)
-    except AuthenticationError as error:
-        raise unauthorized(str(error)) from error
-
-    user = await upsert_telegram_user(telegram_user, session)
-    access_token, expires_at = create_access_token(user.telegram_id, settings)
+def _token_response(user: User) -> TokenResponse:
+    access_token, expires_at = create_access_token(user.telegram_id, get_settings())
     return TokenResponse(
         access_token=access_token,
         expires_at=expires_at,
         user=UserResponse.model_validate(user),
     )
+
+
+@router.post(
+    "/telegram",
+    response_model=TokenResponse,
+    summary="Вход через Telegram Mini App",
+    responses=error_responses(401, 422),
+)
+async def authenticate_with_telegram(
+    data: TelegramAuthRequest,
+    session: AsyncSession = Depends(session_dependency),
+) -> TokenResponse:
+    """Проверяет подпись initData и срок auth_date, создаёт или обновляет
+    пользователя и выдаёт JWT."""
+    try:
+        telegram_user = validate_telegram_init_data(data.init_data, get_settings())
+    except AuthenticationError as error:
+        raise UnauthorizedError(str(error)) from error
+
+    user = await upsert_telegram_user(telegram_user, session)
+    return _token_response(user)
+
+
+@router.post(
+    "/dev",
+    response_model=TokenResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Демонстрационный вход без Telegram",
+    responses=error_responses(404, 422),
+)
+async def authenticate_for_development(
+    data: DevAuthRequest,
+    session: AsyncSession = Depends(session_dependency),
+) -> TokenResponse:
+    """Выдаёт JWT для указанного telegram_id без проверки Telegram.
+
+    Работает только при DEV_AUTH_ENABLED=true, иначе отвечает 404, как будто
+    эндпоинта нет. Нужен для Swagger, демонстрации и ручной проверки API.
+    """
+    if not get_settings().dev_auth_enabled:
+        raise NotFoundError("Not Found")
+    user = await upsert_telegram_user(
+        TelegramUser(
+            id=data.telegram_id,
+            first_name=data.first_name,
+            username=data.username,
+        ),
+        session,
+    )
+    return _token_response(user)

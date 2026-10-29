@@ -12,6 +12,7 @@ dependencies = [
     "fastapi>=0.115,<1",
     "pydantic>=2.10,<3",
     "python-dotenv>=1,<2",
+    "redis>=5,<8",
     "sqlalchemy[asyncio]>=2,<3",
     "uvicorn[standard]>=0.30,<1",
 ]
@@ -21,22 +22,46 @@ test = [
     "httpx>=0.27,<1",
     "pytest>=8,<10",
     "pytest-asyncio>=0.24,<2",
+    "ruff>=0.8,<1",
 ]
 
 [tool.pytest.ini_options]
 addopts = "-q"
 pythonpath = [".."]
 testpaths = ["tests"]
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = [".venv", "kofein_backend.egg-info"]
+
+[tool.ruff.lint]
+# E/W — стиль PEP 8, F — ошибки (неиспользуемые импорты и переменные),
+# I — порядок импортов, B — типичные баги, UP — устаревший синтаксис,
+# SIM — упрощения, RUF — правила самого ruff
+select = ["E", "W", "F", "I", "B", "UP", "SIM", "RUF"]
+ignore = [
+    "B008",    # Depends()/Query() в аргументах по умолчанию — стандартный приём FastAPI
+    "RUF001",  # кириллица в строках — это интерфейс на русском, а не опечатки
+    "RUF002",
+    "RUF003",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["backend"]
 
 [tool.pyright]
 include = ["."]
 
 [tool.setuptools]
-packages = ["backend", "backend.db"]
+packages = ["backend", "backend.api", "backend.db", "backend.services"]
 
 [tool.setuptools.package-dir]
 backend = "."
+"backend.api" = "api"
 "backend.db" = "db"
+"backend.services" = "services"
 
 [tool.setuptools.package-data]
 backend = ["static/*"]

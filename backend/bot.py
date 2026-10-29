@@ -12,7 +12,6 @@ from aiogram.types import (
 
 from .config import get_settings
 
-
 router = Router()
 
 

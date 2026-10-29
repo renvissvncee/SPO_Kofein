@@ -1,7 +1,7 @@
-from datetime import datetime, timezone
 import hashlib
 import hmac
 import json
+from datetime import UTC, datetime
 from urllib.parse import urlencode
 
 
@@ -11,7 +11,7 @@ def make_init_data(
     auth_date: int | None = None,
 ) -> str:
     if auth_date is None:
-        auth_date = int(datetime.now(timezone.utc).timestamp())
+        auth_date = int(datetime.now(UTC).timestamp())
     data = {
         "auth_date": str(auth_date),
         "query_id": "AAHdF6IQAAAAAN0XohDhrOrc",
@@ -29,7 +29,5 @@ def make_init_data(
     }
     check_string = "\n".join(f"{key}={value}" for key, value in sorted(data.items()))
     secret_key = hmac.new(b"WebAppData", bot_token.encode(), hashlib.sha256).digest()
-    data["hash"] = hmac.new(
-        secret_key, check_string.encode(), hashlib.sha256
-    ).hexdigest()
+    data["hash"] = hmac.new(secret_key, check_string.encode(), hashlib.sha256).hexdigest()
     return urlencode(data)

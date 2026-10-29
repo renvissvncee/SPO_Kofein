@@ -1,0 +1,23 @@
+@use '../../../shared/styles/variables.scss';
+
+.layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  touch-action: pan-y;
+  &__content {
+    background: #ffffff;
+    flex: 1;
+    width: 100%;
+
+    padding-top: 80px;
+
+    scroll-behavior: smooth;
+
+    overflow-y: auto;   /* 👈 вот он, внутренний скролл */
+    overflow-x: hidden;
+
+    /* важно для flex */
+    min-height: 0; /* 👈 КРИТИЧНО */
+  }
+}
