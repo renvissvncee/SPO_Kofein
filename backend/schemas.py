@@ -1,94 +1,73 @@
-from pydantic import BaseModel, Field, validator
-from datetime import datetime
-import re
-from typing import List, Optional
+from datetime import datetime, time
 from uuid import UUID
-from datetime import time
 
-class OrderTime(BaseModel):
-    tg_id: int = Field(..., description="Telegram ID пользователя")
-    date: str | None = Field(None, description="Время заказа в формате yyyy-mm-dd hh:mm:ss")
-    action: str = Field(..., description="Действие - 'create', 'update', 'get', или 'delete'")
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-    @validator('date')
-    def validate_order_time_format(cls, v):
-        # Проверяем формат yyyy-mm-dd hh:mm:ss
-        pattern = r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$'
-        if not re.match(pattern, v):
-            raise ValueError('date должно быть в формате yyyy-mm-dd hh:mm:ss')
-        return v
-    
-    @validator('action')
-    def validate_action(cls, v):
-        if v not in ['create', 'update', 'get', 'delete']:
-            raise ValueError("action должно быть 'create', 'update', 'get', или 'delete'")
-        return v
-    
+
 class CoffeeShopResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     name: str
-    description: Optional[str] = None
-    owners: List[int]
+    description: str | None = None
+    owners: list[int]
     opening_time: time
     closing_time: time
     address: str
     latitude: float
     longitude: float
     is_active: bool
-    coffee_shop_image: str | None
+    coffee_shop_image: str | None = None
     created_at: datetime
-    
-    class Config:
-        from_attributes = True
+
 
 class MenuItemResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     coffee_shop_id: UUID
     category_id: UUID
     name: str
-    description: Optional[str] = None
+    description: str | None = None
     base_price: int
-    image_url: Optional[str] = None
+    image_url: str | None = None
     is_available: bool
     created_at: datetime
 
-    class Config:
-        from_attributes = True
-
 
 class MenuCategoryResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     coffee_shop_id: UUID
     name: str
-    items: List[MenuItemResponse] = []
-
-    class Config:
-        from_attributes = True
+    items: list[MenuItemResponse] = Field(default_factory=list)
 
 
 class CoffeeShopMenu(BaseModel):
-    coffee_shop_id: UUID = Field(..., description="UUID кофейни")
-
-    @validator('coffee_shop_id')
-    def validate_coffee_shop_id(cls, v):
-        if not isinstance(v, UUID):
-            raise ValueError('coffee_shop_id должно быть UUID')
-        return v
+    coffee_shop_id: UUID = Field(description="Coffee shop UUID")
 
 
 class AddToCartRequest(BaseModel):
-    tg_id: int = Field(..., description="Telegram ID пользователя")
-    coffee_shop_id: UUID = Field(..., description="UUID кофейни")
-    menu_item_id: UUID = Field(..., description="UUID пункта меню")
-    quantity: int = Field(1, ge=-1, description="Количество товара")
+    coffee_shop_id: UUID = Field(description="Coffee shop UUID")
+    menu_item_id: UUID = Field(description="Menu item UUID")
+    quantity: int = Field(1, ge=-1, description="Quantity change")
+
+    @field_validator("quantity")
+    @classmethod
+    def quantity_must_not_be_zero(cls, value: int) -> int:
+        if value == 0:
+            raise ValueError("quantity must not be zero")
+        return value
 
 
 class RemoveFromCartRequest(BaseModel):
-    tg_id: int = Field(..., description="Telegram ID пользователя")
-    order_item_id: UUID = Field(..., description="UUID товара в заказе")
+    order_item_id: UUID = Field(description="Order item UUID")
 
 
 class CartItemResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     order_id: UUID
     menu_item_id: UUID
@@ -96,31 +75,25 @@ class CartItemResponse(BaseModel):
     unit_price: int
     total_price: int
     product: MenuItemResponse
-    
-    class Config:
-        from_attributes = True
 
 
 class CartResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     telegram_id: int
     coffee_shop_id: UUID
     status: str
     total_amount: int
-    items: List[CartItemResponse] = []
+    items: list[CartItemResponse] = Field(default_factory=list)
     created_at: datetime
-    
-    class Config:
-        from_attributes = True
 
 
 class FavoriteRequest(BaseModel):
-    tg_id: int = Field(..., description="Telegram ID пользователя")
-    coffee_shop_id: UUID = Field(..., description="UUID кофейни")
+    coffee_shop_id: UUID = Field(description="Coffee shop UUID")
 
 
 class FavoriteResponse(BaseModel):
-    coffee_shops: List[CoffeeShopResponse] = []
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True
+    coffee_shops: list[CoffeeShopResponse] = Field(default_factory=list)

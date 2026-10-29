@@ -166,7 +166,7 @@ async def add_to_cart(tg_id: int, coffee_shop_id, menu_item_id, quantity: int):
         )
         menu_item = menu_item_result.scalar_one_or_none()
         
-        if not menu_item:
+        if not menu_item or menu_item.coffee_shop_id != coffee_shop_id:
             return None
         
         # Проверяем, есть ли уже такой товар в корзине
@@ -266,7 +266,13 @@ async def remove_from_cart(tg_id: int, order_item_id):
     async with get_session() as session:
         # Получаем товар
         result = await session.execute(
-            select(OrderItem).where(OrderItem.id == order_item_id).options(selectinload(OrderItem.order))
+            select(OrderItem)
+            .join(Order, Order.id == OrderItem.order_id)
+            .where(
+                OrderItem.id == order_item_id,
+                Order.telegram_id == tg_id,
+            )
+            .options(selectinload(OrderItem.order))
         )
         order_item = result.scalar_one_or_none()
         

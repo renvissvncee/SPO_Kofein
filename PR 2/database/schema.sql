@@ -1,7 +1,13 @@
 CREATE TABLE users (
     telegram_id BIGINT PRIMARY KEY,
+    first_name TEXT NOT NULL,
+    last_name TEXT,
+    username TEXT,
+    language_code TEXT,
+    is_premium BOOLEAN NOT NULL DEFAULT FALSE,
     phone VARCHAR(30),
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE coffee_shops (
@@ -14,6 +20,7 @@ CREATE TABLE coffee_shops (
     latitude DECIMAL(9,6) NOT NULL,
     longitude DECIMAL(9,6) NOT NULL,
     is_active BOOLEAN DEFAULT TRUE,
+    coffee_shop_image TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -52,6 +59,7 @@ CREATE TABLE orders (
 
     CHECK (status IN (
         'pending',
+        'cart',
         'confirmed',
         'completed',
         'cancelled'
@@ -65,4 +73,12 @@ CREATE TABLE order_items (
     quantity INTEGER NOT NULL CHECK (quantity > 0),
     unit_price INTEGER NOT NULL CHECK (unit_price >= 0),
     total_price INTEGER NOT NULL CHECK (total_price >= 0)
+);
+
+CREATE TABLE favorites (
+    id UUID PRIMARY KEY,
+    telegram_id BIGINT NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+    coffee_shop_id UUID NOT NULL REFERENCES coffee_shops(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (telegram_id, coffee_shop_id)
 );
