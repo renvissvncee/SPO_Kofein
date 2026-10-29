@@ -63,3 +63,6 @@ coverage/
 *.pid
 docker-compose.override.yml
 .dockerignore
+
+# Отчёт pytest из CI
+pytest-report.xml
